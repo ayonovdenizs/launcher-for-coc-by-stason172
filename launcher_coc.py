@@ -37,6 +37,9 @@ def start_options():
 def exit():
     launcher.quit()
 
+# update wip
+def update_launcher():
+    os.system('start msg.vbs')
 
 but1 = Button(text='ЗАПУСК (Debug)', font=("Arial", 12), command=start_with_debug)
 but2 = Button(text='ЗАПУСК', font=("Arial", 12), command=start_game)
