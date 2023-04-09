@@ -1,3 +1,0 @@
-@ECHO OFF
-title build file...
-pyinstaller launcher_coc.py --clean --uac-admin --disable-windowed-traceback -i "E:\Games\S.T.A.L.K.E.R. - Call of Chernobyl\stalker_coc.ico" --onefile --name launcher
