@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from launcher import APP_NAME, GAME_BUILD, REPO_URL, VERSION
+from launcher.console import use_utf8_console
 
 TEMPLATE = """VSVersionInfo(
   ffi=FixedFileInfo(
@@ -70,6 +71,7 @@ def render(version: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    use_utf8_console()
     parser = argparse.ArgumentParser(description="Ресурс версии для .exe")
     parser.add_argument("--version", default=VERSION, help="версия (по умолчанию из launcher)")
     parser.add_argument(

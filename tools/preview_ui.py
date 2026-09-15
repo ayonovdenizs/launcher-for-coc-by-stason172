@@ -25,6 +25,7 @@ from PySide6.QtCore import QCoreApplication, QPoint
 from PySide6.QtGui import QColor, QImage, QPainter
 
 from launcher.app import create_application
+from launcher.console import use_utf8_console
 from launcher.ui.main_window import LauncherWindow
 
 
@@ -53,6 +54,7 @@ def render(out_path: Path, hover: int | None = None, game_dir: Path | None = Non
 
 
 def main(argv: list[str] | None = None) -> int:
+    use_utf8_console()
     parser = argparse.ArgumentParser(description="Скриншот окна лаунчера")
     parser.add_argument(
         "--out",

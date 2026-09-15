@@ -19,6 +19,10 @@ from pathlib import Path
 
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from launcher.console import use_utf8_console
+
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "assets"
 
@@ -51,6 +55,7 @@ def build_background(source: Path, out_jpg: Path) -> None:
 
 
 def main() -> int:
+    use_utf8_console()
     icon_source = ASSETS / "icon_source.png"
     background_source = ASSETS / "background.png"
 
