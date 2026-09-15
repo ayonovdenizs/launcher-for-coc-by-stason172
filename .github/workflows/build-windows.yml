@@ -1,0 +1,86 @@
+name: Build Windows launcher
+
+# Переиспользуемая сборка .exe: её вызывают build.yml (артефакт на каждый push)
+# и release.yml (прикрепить файл к релизу).
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Версия для ресурса .exe (например, 1.2.0). Пусто — из launcher/__init__.py"
+        type: string
+        required: false
+        default: ""
+      artifact-name:
+        description: "Имя артефакта с собранным .exe"
+        type: string
+        required: false
+        default: Launcher-CoC-windows
+    outputs:
+      exe-name:
+        description: "Имя собранного файла"
+        value: ${{ jobs.build.outputs.exe-name }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Сборка .exe (PyInstaller)
+    runs-on: windows-latest
+    outputs:
+      exe-name: ${{ steps.pack.outputs.exe-name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Установка зависимостей
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+
+      - name: Версия сборки
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$(python -c "from launcher import VERSION; print(VERSION)")" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ресурс версии для .exe
+        run: python tools/make_version_info.py --version "${{ steps.version.outputs.value }}"
+
+      - name: PyInstaller
+        env:
+          COC_LAUNCHER_VERSION: ${{ steps.version.outputs.value }}
+        run: pyinstaller launcher.spec --noconfirm --clean --distpath dist --workpath build/pyinstaller
+
+      - name: Проверка артефакта
+        id: pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          exe="dist/Launcher-CoC.exe"
+          test -f "$exe" || { echo "Не собран $exe"; exit 1; }
+          size=$(stat -c%s "$exe")
+          echo "Размер: $((size / 1024 / 1024)) МБ"
+          if [ "$size" -lt 5000000 ]; then echo "Файл подозрительно мал"; exit 1; fi
+          cp "$exe" "dist/Launcher-CoC-${{ steps.version.outputs.value }}.exe"
+          echo "exe-name=Launcher-CoC-${{ steps.version.outputs.value }}.exe" >> "$GITHUB_OUTPUT"
+          cd dist && sha256sum "Launcher-CoC-${{ steps.version.outputs.value }}.exe" > SHA256SUMS.txt
+
+      - name: Загрузить артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: |
+            dist/Launcher-CoC-*.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30

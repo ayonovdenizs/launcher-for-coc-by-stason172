@@ -1,7 +1,23 @@
-/launcher.spec
-/update.cfg
-/msg.vbs
-/launcher_coc.exe
-/venv/
+# --- сборка и артефакты
 /dist/
 /build/
+*.spec.bak
+
+# --- Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- служебные файлы рядом с игрой
+/launcher.log
+/launcher_coc.exe
+/update.cfg
+/msg.vbs
+
+# --- IDE
+.idea/
+.vscode/

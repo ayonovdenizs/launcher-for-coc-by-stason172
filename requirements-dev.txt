@@ -1,0 +1,7 @@
+# Зависимости для разработки и CI (рантайм — в requirements.txt)
+-r requirements.txt
+
+pytest>=8
+ruff>=0.6
+Pillow>=10          # пересборка иконки и фонового арта (tools/make_assets.py)
+pyinstaller>=6.6    # локальная сборка .exe
