@@ -20,8 +20,9 @@
 
 ### Вариант 1 — готовый `.exe` (Python не нужен)
 
-1. Откройте [последний релиз](https://github.com/ayonovdenizs/launcher-for-coc-by-stason172/releases/latest).
-2. Скачайте `Launcher-CoC.exe` (при желании сверьте `SHA256SUMS.txt`).
+1. Скачайте `Launcher-CoC.exe` из [последнего релиза](https://github.com/ayonovdenizs/launcher-for-coc-by-stason172/releases/latest)
+   ([прямая ссылка](https://github.com/ayonovdenizs/launcher-for-coc-by-stason172/releases/latest/download/Launcher-CoC.exe);
+   при желании сверьте контрольную сумму из `SHA256SUMS.txt`).
 3. Положите файл в корневую папку сборки — рядом со `Stalker-CoC.exe`.
 4. Запустите лаунчер.
 

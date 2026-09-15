@@ -65,6 +65,11 @@ jobs:
               print()
               print("### Файлы релиза")
               print("- `Launcher-CoC.exe` — готовый лаунчер для Windows (Python не нужен)")
+              print(
+                  "- Прямая ссылка на последнюю версию: "
+                  "https://github.com/ayonovdenizs/launcher-for-coc-by-stason172"
+                  "/releases/latest/download/Launcher-CoC.exe"
+              )
               print("- `SHA256SUMS.txt` — контрольная сумма файла")
               print()
               print("> Файлы игры в релиз не входят: лаунчер нужно положить в корневую папку сборки.")
@@ -82,4 +87,4 @@ jobs:
           gh release create "$TAG" \
             --title "Лаунчер CoC ${{ steps.version.outputs.version }}" \
             --notes-file release-notes.md \
-            dist/Launcher-CoC-*.exe dist/SHA256SUMS.txt
+            dist/Launcher-CoC.exe dist/SHA256SUMS.txt

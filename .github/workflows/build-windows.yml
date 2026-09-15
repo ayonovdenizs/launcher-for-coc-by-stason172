@@ -71,16 +71,17 @@ jobs:
           size=$(stat -c%s "$exe")
           echo "Размер: $((size / 1024 / 1024)) МБ"
           if [ "$size" -lt 5000000 ]; then echo "Файл подозрительно мал"; exit 1; fi
-          cp "$exe" "dist/Launcher-CoC-${{ steps.version.outputs.value }}.exe"
-          echo "exe-name=Launcher-CoC-${{ steps.version.outputs.value }}.exe" >> "$GITHUB_OUTPUT"
-          cd dist && sha256sum "Launcher-CoC-${{ steps.version.outputs.value }}.exe" > SHA256SUMS.txt
+          # имя без версии: так работает прямая ссылка на последний релиз
+          # https://github.com/<owner>/<repo>/releases/latest/download/Launcher-CoC.exe
+          echo "exe-name=Launcher-CoC.exe" >> "$GITHUB_OUTPUT"
+          cd dist && sha256sum Launcher-CoC.exe > SHA256SUMS.txt
 
       - name: Загрузить артефакт
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            dist/Launcher-CoC-*.exe
+            dist/Launcher-CoC.exe
             dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
