@@ -1,9 +1,11 @@
 """Превью интерфейса лаунчера в PNG (без запуска игры).
 
-Полезно, когда нужно посмотреть на дизайн в headless-окружении или
-приложить скриншот к pull request::
+Полезно, когда нужно посмотреть на дизайн в headless-окружении или приложить
+скриншот к pull request::
 
     python tools/preview_ui.py --out build/ui-preview.png --hover 2
+    python tools/preview_ui.py --config examples/other-mod/config.launcher \
+        --out build/ui-preview-other-mod.png
 
 Файл рендерится в PNG поверх тёмного фона, имитирующего рабочий стол.
 """
@@ -24,15 +26,30 @@ sys.path.insert(0, str(ROOT))
 from PySide6.QtCore import QCoreApplication, QPoint
 from PySide6.QtGui import QColor, QImage, QPainter
 
-from launcher.app import create_application
+from launcher.config import ConfigError, load_config
 from launcher.console import use_utf8_console
-from launcher.ui.main_window import LauncherWindow
+from launcher.ui import theme
 
 
-def render(out_path: Path, hover: int | None = None, game_dir: Path | None = None) -> Path:
+def render(
+    out_path: Path,
+    config_path: Path,
+    hover: int | None = None,
+    game_dir: Path | None = None,
+) -> Path:
     """Отрисовать окно лаунчера в ``out_path`` и вернуть путь."""
+    from launcher.app import create_application
+    from launcher.ui.main_window import LauncherWindow
+
+    config_path = Path(config_path).resolve()
+    game_dir = Path(game_dir).resolve() if game_dir else config_path.parent
+    config = load_config(game_dir, config_path)
+
     application = create_application(["preview"])
-    window = LauncherWindow(game_dir or ROOT)
+    theme.set_accent(config.accent)
+    application.setStyleSheet(theme.stylesheet())
+
+    window = LauncherWindow(config)
     window.show()
     QCoreApplication.processEvents()
 
@@ -57,6 +74,12 @@ def main(argv: list[str] | None = None) -> int:
     use_utf8_console()
     parser = argparse.ArgumentParser(description="Скриншот окна лаунчера")
     parser.add_argument(
+        "--config",
+        type=Path,
+        default=ROOT / "config.launcher",
+        help="файл настройки (по умолчанию config.launcher репозитория)",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=ROOT / "build" / "ui-preview.png",
@@ -71,7 +94,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--game-dir", type=Path, default=None, help="каталог игры для проверок")
     args = parser.parse_args(argv)
 
-    print(f"Готово: {render(args.out, args.hover, args.game_dir)}")
+    try:
+        out = render(args.out, args.config, args.hover, args.game_dir)
+    except ConfigError as error:
+        print(error.summary(), file=sys.stderr)
+        return 2
+    print(f"Готово: {out}")
     return 0
 
 

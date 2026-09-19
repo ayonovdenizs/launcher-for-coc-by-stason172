@@ -30,6 +30,7 @@ from ..options import LaunchOption
 from . import theme
 
 HOVER_DURATION_MS = 150
+MIN_BUTTON_WIDTH = 240
 
 
 class HoverButton(QAbstractButton):
@@ -110,7 +111,12 @@ class OptionButton(HoverButton):
         self._hint_font.setPointSizeF(8.6)
 
     def sizeHint(self) -> QSize:
-        return QSize(theme.WINDOW_WIDTH - 2 * theme.CONTENT_MARGIN, theme.BUTTON_HEIGHT)
+        # ширину задаёт раскладка окна, здесь важна только высота кнопки
+        width = max(super().sizeHint().width(), MIN_BUTTON_WIDTH)
+        return QSize(width, theme.BUTTON_HEIGHT)
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(MIN_BUTTON_WIDTH, theme.BUTTON_HEIGHT)
 
     # ------------------------------------------------------------- отрисовка
 

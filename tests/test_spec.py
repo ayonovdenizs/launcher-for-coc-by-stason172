@@ -74,6 +74,23 @@ def test_assets_are_declared_and_present() -> None:
         assert (ROOT / "assets" / name).is_file(), f"нет файла assets/{name}"
 
 
+def test_exe_name_can_be_overridden_by_fork() -> None:
+    """Имя сборки читается из окружения — форк назовёт её по-своему."""
+    text = spec_text()
+    assert "COC_EXE_NAME" in text
+    assert "name=EXE_NAME" in text.replace(" ", "")
+
+
+def test_config_launcher_is_not_bundled() -> None:
+    """config.launcher лежит рядом с .exe и правится автором мода.
+
+    Внутрь сборки его класть нельзя: тогда пользователь не смог бы
+    отредактировать файл, а лаунчер требует его наличия.
+    """
+    text = spec_text()
+    assert "config.launcher" not in text.split("datas=")[1].split("]")[0]
+
+
 def test_icon_is_used_for_exe() -> None:
     assert 'icon="assets/icon.ico"' in spec_text().replace(" ", "")
 

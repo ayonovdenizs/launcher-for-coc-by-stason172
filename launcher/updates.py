@@ -1,9 +1,10 @@
-"""Проверка свежих релизов лаунчера через GitHub API.
+"""Проверка свежих релизов мода через GitHub API.
 
 Лаунчер не подменяет сам себя: он показывает, что вышла новая версия,
-и открывает страницу релиза, где лежит собранный CI ``Launcher-CoC.exe``.
-Любая ошибка сети — не проблема пользователя, поэтому функции возвращают
-``None``/``False`` вместо исключений.
+и открывает страницу релиза. Любая ошибка сети — не проблема пользователя,
+поэтому функции возвращают ``None``/``False`` вместо исключений.
+
+Репозиторий берётся из ``config.launcher`` (поле ``update.repo``).
 """
 
 from __future__ import annotations
@@ -21,8 +22,8 @@ from . import REPO_URL
 LOGGER = logging.getLogger(__name__)
 
 API_URL = "https://api.github.com/repos/{repo}/releases/latest"
-REPO_SLUG = REPO_URL.removeprefix("https://github.com/")
-DEFAULT_TIMEOUT = 6.0
+#: Репозиторий лаунчера — запасной вариант для старого поведения.
+DEFAULT_REPO = REPO_URL.removeprefix("https://github.com/")
 USER_AGENT = "Launcher-CoC"
 
 _VERSION_RE = re.compile(r"(\d+(?:\.\d+)*)")
@@ -61,23 +62,24 @@ def is_newer(candidate: str, current: str) -> bool:
     return padded_new > padded_current
 
 
-def api_url(slug: str = REPO_SLUG) -> str:
-    """URL GitHub API для последнего релиза репозитория ``slug``."""
-    return API_URL.format(repo=slug)
+def api_url(repo: str = DEFAULT_REPO) -> str:
+    """URL GitHub API для последнего релиза репозитория ``repo``."""
+    return API_URL.format(repo=repo)
 
 
 def fetch_latest_release(
-    timeout: float = DEFAULT_TIMEOUT,
+    timeout: float = 6.0,
     opener: Callable[..., object] | None = None,
-    slug: str = REPO_SLUG,
+    repo: str = DEFAULT_REPO,
 ) -> ReleaseInfo | None:
     """Последний релиз репозитория или ``None``, если узнать не удалось.
 
+    :param repo: ``"владелец/репозиторий"`` из ``update.repo``.
     :param opener: подменяемый «сетевой» вызов (в тестах — без интернета).
     """
     fetch = opener or urllib.request.urlopen
     request = urllib.request.Request(
-        api_url(slug),
+        api_url(repo),
         headers={
             "User-Agent": USER_AGENT,
             "Accept": "application/vnd.github+json",
@@ -94,7 +96,7 @@ def fetch_latest_release(
         ValueError,
         AttributeError,
     ) as exc:
-        LOGGER.info("Не удалось проверить обновления: %s", exc)
+        LOGGER.info("Не удалось проверить обновления (%s): %s", repo, exc)
         return None
 
     tag = str(payload.get("tag_name") or "")
@@ -102,7 +104,7 @@ def fetch_latest_release(
         version=tag.lstrip("vV") or str(payload.get("name") or ""),
         tag=tag,
         name=str(payload.get("name") or tag),
-        url=str(payload.get("html_url") or f"{REPO_URL}/releases/latest"),
+        url=str(payload.get("html_url") or f"https://github.com/{repo}/releases/latest"),
         notes=str(payload.get("body") or ""),
     )
 
@@ -110,15 +112,16 @@ def fetch_latest_release(
 def check_for_update(
     current_version: str,
     *,
-    timeout: float = DEFAULT_TIMEOUT,
+    repo: str = DEFAULT_REPO,
+    timeout: float = 6.0,
     opener: Callable[..., object] | None = None,
 ) -> ReleaseInfo | None:
     """Вернуть описание нового релиза, если он новее ``current_version``."""
-    release = fetch_latest_release(timeout=timeout, opener=opener)
+    release = fetch_latest_release(timeout=timeout, opener=opener, repo=repo)
     if release is None or not release.version:
         return None
     if is_newer(release.version, current_version):
-        LOGGER.info("Доступна новая версия лаунчера: %s", release.version)
+        LOGGER.info("Доступна новая версия (%s): %s", repo, release.version)
         return release
-    LOGGER.info("Лаунчер актуален (версия %s)", current_version)
+    LOGGER.info("Лаунчер актуален (версия %s, репозиторий %s)", current_version, repo)
     return None

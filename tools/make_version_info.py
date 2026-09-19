@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from launcher import APP_NAME, GAME_BUILD, REPO_URL, VERSION
+from launcher import APP_NAME, ORGANISATION, REPO_URL, VERSION
 from launcher.console import use_utf8_console
 
 TEMPLATE = """VSVersionInfo(
@@ -34,12 +34,12 @@ TEMPLATE = """VSVersionInfo(
     StringFileInfo([
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'stason172'),
-         StringStruct('FileDescription', 'Лаунчер {game_build}'),
+        [StringStruct('CompanyName', '{organisation}'),
+         StringStruct('FileDescription', '{description}'),
          StringStruct('FileVersion', '{version}'),
-         StringStruct('InternalName', 'Launcher-CoC'),
+         StringStruct('InternalName', '{exe_name}'),
          StringStruct('LegalCopyright', '{repo}'),
-         StringStruct('OriginalFilename', 'Launcher-CoC.exe'),
+         StringStruct('OriginalFilename', '{exe_name}.exe'),
          StringStruct('ProductName', '{app_name}'),
          StringStruct('ProductVersion', '{version}')])
     ]),
@@ -60,12 +60,28 @@ def version_tuple(version: str) -> tuple[int, int, int, int]:
     return tuple(numbers[:4])  # type: ignore[return-value]
 
 
-def render(version: str) -> str:
+def description() -> str:
+    """Описание файла для свойств .exe: название мода из config.launcher."""
+    config_path = ROOT / "config.launcher"
+    if config_path.exists():
+        try:
+            from launcher.config import read_config
+
+            return f"Лаунчер: {read_config(config_path).name}"
+        except Exception:
+            pass
+    return "Лаунчер мода"
+
+
+def render(version: str, exe_name: str = "Launcher-CoC") -> str:
+    """Содержимое ресурса версии для PyInstaller."""
     return TEMPLATE.format(
         version=version,
         version_tuple=version_tuple(version),
         app_name=APP_NAME,
-        game_build=GAME_BUILD,
+        description=description(),
+        exe_name=exe_name,
+        organisation=ORGANISATION,
         repo=REPO_URL,
     )
 
@@ -77,10 +93,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--out", type=Path, default=ROOT / "build" / "version_info.txt", help="куда писать"
     )
+    parser.add_argument(
+        "--name",
+        default="Launcher-CoC",
+        help="имя .exe без расширения (для форков, меняющих имя сборки)",
+    )
     args = parser.parse_args(argv)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(render(args.version), encoding="utf-8")
+    args.out.write_text(render(args.version, args.name), encoding="utf-8")
     print(f"Версия {args.version} → {args.out}")
     return 0
 

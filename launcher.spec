@@ -16,6 +16,10 @@ from pathlib import Path
 ROOT = Path(SPECPATH)
 VERSION_FILE = ROOT / "build" / "version_info.txt"
 
+# Имя сборки. Форк может поменять его переменной окружения COC_EXE_NAME
+# (workflow передаёт значение параметра exe-name).
+EXE_NAME = os.environ.get("COC_EXE_NAME") or "Launcher-CoC"
+
 # Отрезаем всё, что лаунчеру не нужно: интерфейс — обычные виджеты Qt,
 # поэтому тяжёлые семейства (WebEngine, QML/Quick, 3D, мультимедиа) в .exe
 # не попадают. QtOpenGL, QtSvg, QtXml оставлены намеренно: их подтягивают
@@ -89,7 +93,7 @@ exe = EXE(  # noqa: F821
     a.binaries,
     a.datas,
     [],
-    name="Launcher-CoC",
+    name=EXE_NAME,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

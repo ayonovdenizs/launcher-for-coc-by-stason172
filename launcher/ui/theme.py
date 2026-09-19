@@ -1,4 +1,8 @@
-"""Палитра, размеры и таблица стилей интерфейса."""
+"""Палитра, размеры и таблица стилей интерфейса.
+
+Акцентный цвет приходит из ``config.launcher``: :func:`set_accent` пересчитывает
+производные оттенки, а :func:`stylesheet` собирает QSS уже под текущую палитру.
+"""
 
 from __future__ import annotations
 
@@ -6,15 +10,20 @@ from PySide6.QtGui import QColor
 
 # --------------------------------------------------------------------- размеры
 
-WINDOW_WIDTH = 470
-WINDOW_HEIGHT = 680
+DEFAULT_ACCENT = "#c9821f"
 WINDOW_RADIUS = 14
+
 TITLEBAR_HEIGHT = 42
-HERO_HEIGHT = 170
 CONTENT_MARGIN = 22
-BUTTON_HEIGHT = 60
+BUTTON_HEIGHT = 56
 BUTTON_SPACING = 9
 BUTTON_RADIUS = 10
+STATUS_HEIGHT = 26
+FOOTER_HEIGHT = 22
+BOTTOM_MARGIN = 10
+#: Отступ от краёв экрана, чтобы окно не упиралось в панель задач.
+SCREEN_MARGIN = 70
+MIN_MENU_HEIGHT = 120
 
 FONT_STACK = '"Segoe UI", "Inter", "Roboto", "Noto Sans", "DejaVu Sans", sans-serif'
 
@@ -42,10 +51,10 @@ def lerp_color(start: QColor, end: QColor, t: float) -> QColor:
 TEXT = "#ecebe8"
 TEXT_MUTED = "#9aa1ac"
 TEXT_DIM = "#6b7280"
-ACCENT = "#c9821f"
+
+ACCENT = DEFAULT_ACCENT
 ACCENT_LIGHT = "#e6a13c"
 ACCENT_DARK = "#8f5a12"
-DANGER = "#c0392b"
 
 SCRIM_TOP = c("#080a0d", 96)
 SCRIM_MIDDLE = c("#080a0d", 158)
@@ -61,7 +70,26 @@ BUTTON_BORDER_PRESSED = c("#ffffff", 20)
 TITLEBAR_BUTTON_HOVER = c("#ffffff", 26)
 TITLEBAR_CLOSE_HOVER = c("#c0392b", 210)
 
-STYLESHEET = f"""
+
+def set_accent(color: str) -> None:
+    """Задать акцентный цвет (hex из ``config.launcher``).
+
+    Светлый и тёмный оттенки выводятся автоматически, чтобы кнопки,
+    подсветки и полосы смотрелись согласованно при любом цвете мода.
+    """
+    global ACCENT, ACCENT_LIGHT, ACCENT_DARK
+
+    base = QColor(color)
+    if not base.isValid():
+        base = QColor(DEFAULT_ACCENT)
+    ACCENT = base.name()
+    ACCENT_LIGHT = base.lighter(128).name()
+    ACCENT_DARK = base.darker(142).name()
+
+
+def stylesheet() -> str:
+    """Таблица стилей для текущей палитры."""
+    return f"""
 QWidget {{
     font-family: {FONT_STACK};
     color: {TEXT};
@@ -110,6 +138,33 @@ QLabel#status[success="true"] {{
 QLabel#footer {{
     color: {TEXT_DIM};
     font-size: 10px;
+}}
+
+QScrollArea, QScrollArea > QWidget > QWidget {{
+    background: transparent;
+    border: none;
+}}
+
+QScrollBar:vertical {{
+    background: transparent;
+    width: 8px;
+    margin: 0px;
+}}
+
+QScrollBar::handle:vertical {{
+    background: #ffffff33;
+    border-radius: 4px;
+    min-height: 30px;
+}}
+
+QScrollBar::handle:vertical:hover {{
+    background: {ACCENT_LIGHT};
+}}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+    background: transparent;
+    height: 0px;
 }}
 
 QToolTip {{

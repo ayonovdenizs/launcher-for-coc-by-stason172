@@ -40,6 +40,35 @@ def resource_path(*parts: str) -> Path:
     return resource_root().joinpath(*parts)
 
 
+def find_asset(
+    value: str | None,
+    base_dir: Path,
+    *bundled_names: str,
+) -> Path | None:
+    """Найти ресурс: сначала путь из конфига, потом встроенный файл.
+
+    :param value: значение из ``config.launcher`` (путь относительно файла
+        конфига; ``~`` и переменные окружения поддерживаются). ``None`` —
+        сразу берём встроенный файл.
+    :param bundled_names: имена файлов в ``assets/`` внутри пакета/сборки.
+    """
+    if value:
+        from .config import expand_path  # локальный импорт: без цикла модулей
+
+        candidate = expand_path(str(value), Path(base_dir))
+        if not candidate.is_absolute():
+            candidate = Path(base_dir) / candidate
+        if candidate.exists():
+            return candidate
+        LOGGER.warning("Файл из config.launcher не найден: %s", candidate)
+
+    for name in bundled_names:
+        candidate = resource_path(ASSETS_DIR, name)
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def setup_logging(game_dir: Path) -> Path | None:
     """Логи в консоль и, если возможно, в ``launcher.log`` рядом с игрой.
 

@@ -16,6 +16,11 @@ on:
         type: string
         required: false
         default: Launcher-CoC-windows
+      exe-name:
+        description: "Имя .exe без расширения: форк может назвать сборку по-своему"
+        type: string
+        required: false
+        default: Launcher-CoC
     outputs:
       exe-name:
         description: "Имя собранного файла"
@@ -53,12 +58,17 @@ jobs:
             echo "value=$(python -c "from launcher import VERSION; print(VERSION)")" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Проверка config.launcher
+        run: python launcher_coc.py --check-config
+
       - name: Ресурс версии для .exe
-        run: python tools/make_version_info.py --version "${{ steps.version.outputs.value }}"
+        run: |
+          python tools/make_version_info.py --version "${{ steps.version.outputs.value }}" --name "${{ inputs.exe-name }}"
 
       - name: PyInstaller
         env:
           COC_LAUNCHER_VERSION: ${{ steps.version.outputs.value }}
+          COC_EXE_NAME: ${{ inputs.exe-name }}
         run: pyinstaller launcher.spec --noconfirm --clean --distpath dist --workpath build/pyinstaller
 
       - name: Проверка артефакта
@@ -66,22 +76,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          exe="dist/Launcher-CoC.exe"
+          exe="dist/${{ inputs.exe-name }}.exe"
           test -f "$exe" || { echo "Не собран $exe"; exit 1; }
           size=$(stat -c%s "$exe")
           echo "Размер: $((size / 1024 / 1024)) МБ"
           if [ "$size" -lt 5000000 ]; then echo "Файл подозрительно мал"; exit 1; fi
           # имя без версии: так работает прямая ссылка на последний релиз
-          # https://github.com/<owner>/<repo>/releases/latest/download/Launcher-CoC.exe
-          echo "exe-name=Launcher-CoC.exe" >> "$GITHUB_OUTPUT"
-          cd dist && sha256sum Launcher-CoC.exe > SHA256SUMS.txt
+          # https://github.com/<owner>/<repo>/releases/latest/download/<имя>.exe
+          echo "exe-name=${{ inputs.exe-name }}.exe" >> "$GITHUB_OUTPUT"
+          # конфиг кладём рядом: пользователю нужны оба файла
+          cp config.launcher dist/config.launcher
+          cd dist && sha256sum "${{ inputs.exe-name }}.exe" > SHA256SUMS.txt
 
       - name: Загрузить артефакт
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            dist/Launcher-CoC.exe
+            dist/${{ inputs.exe-name }}.exe
+            dist/config.launcher
             dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
