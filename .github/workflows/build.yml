@@ -1,0 +1,27 @@
+name: Build
+
+# Каждый push и pull request собирает Launcher-CoC.exe и кладёт его
+# в артефакты сборки — можно скачать и проверить без установки Python.
+
+on:
+  push:
+    branches: ["ayden", "main", "arena/**"]
+    paths-ignore:
+      - "**/*.md"
+      - "assets/**"
+  pull_request:
+    branches: ["ayden", "main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      artifact-name: Launcher-CoC-windows-${{ github.sha }}

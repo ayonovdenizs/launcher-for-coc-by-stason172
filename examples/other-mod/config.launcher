@@ -1,0 +1,96 @@
+// config.launcher — пример настройки лаунчера для «чужого» мода.
+//
+// Скопируйте этот файл рядом со своим Launcher.exe и поправьте значения:
+// ничего в коде лаунчера менять не нужно. Все поля описаны в комментариях
+// здесь и подробно — в docs/CONFIG.md.
+//
+// Проверить:  Launcher.exe --check-config --config examples/other-mod/config.launcher
+
+{
+  "name": "Лаунчер сборки «Северный ветер»",
+  "hint": "Сборка v2.4 · выберите действие",
+  "footer": "«Северный ветер» · лаунчер v{version}",
+
+  // Свой цвет акцента: светлый и тёмный оттенки лаунчер подберёт сам
+  "accent": "#3f7d5a",
+
+  "window": {
+    "width": 500,
+    "hero_height": 170
+  },
+
+  "hero": {
+    "kicker": "S.T.A.L.K.E.R.",
+    "title": "СЕВЕРНЫЙ ВЕТЕР",
+    "subtitle": "Сюжетная сборка · версия 2.4"
+  },
+
+  // Своя картинка рядом с конфигом; null — встроенный арт лаунчера.
+  // Поддерживаются .jpg/.png, размер окна не важен — лаунчер сам обрежет.
+  "assets": {
+    "background": null,   // например: "art/северный-ветер.jpg"
+    "icon": null          // например: "art/иконка.ico"
+  },
+
+  // У мода свой исполняемый файл и свои обязательные файлы
+  "game": {
+    "executable": "bin/xrEngine.exe",
+    "required_files": ["bin/xrEngine.exe", "gamedata", "fsgame.ltx"]
+  },
+
+  // Репозиторий мода — отсюда кнопка «ОБНОВЛЕНИЕ» берёт свежий релиз
+  "update": {
+    "enabled": true,
+    "repo": "example-org/severny-veter"
+  },
+
+  "options": [
+    {
+      "title": "ИГРАТЬ",
+      "description": "Запуск сборки «Северный ветер»",
+      "action": "run",
+      // target не указан — берётся game.executable
+      "args": "-nointro -x64",
+      "accent": true
+    },
+    {
+      "title": "ИГРАТЬ (ОКНО)",
+      "description": "Оконный режим для отладки",
+      "action": "run",
+      "target": "bin/xrEngine.exe",
+      "args": ["-nointro", "-x64", "-w", "-dbg"]
+    },
+    {
+      "title": "ПРЕСЕТЫ ГРАФИКИ",
+      "description": "Свой инсталлятор пресетов",
+      "action": "run",
+      "target": "tools/Presets.exe",
+      "keep_open": true,
+      "hide_if_missing": true     // нет файла — кнопки не будет
+    },
+    {
+      "title": "ЛОГ ДВИЖКА",
+      "description": "Открыть папку с логами",
+      "action": "folder",
+      "path": "%LOCALAPPDATA%/stalker-veter/logs",   // переменные окружения работают
+      "hide_if_missing": true
+    },
+    {
+      "title": "СОХРАНЕНИЯ",
+      "description": "Мои сохранения",
+      "action": "folder",
+      "path": "savedgames"
+    },
+    {
+      "title": "ГАЙД ПО УСТАНОВКЕ",
+      "description": "Пошаговая инструкция в браузере",
+      "action": "url",
+      "url": "https://example.com/veter/guide"
+    },
+    {
+      "title": "ОБНОВИТЬ СБОРКУ",
+      "description": "Проверить новую версию мода",
+      "action": "update"
+    }
+  ]
+}

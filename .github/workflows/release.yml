@@ -1,0 +1,91 @@
+name: Release
+
+# Официальный релиз: поставьте тег версии — CI соберёт .exe, посчитает
+# контрольную сумму и создаст GitHub Release с описанием из CHANGELOG.md.
+#
+#   git tag v1.2.0 && git push origin v1.2.0
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Существующий тег версии, например v1.2.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      version: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      artifact-name: release-exe
+
+  release:
+    name: Публикация релиза
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Скачать собранный .exe
+        uses: actions/download-artifact@v4
+        with:
+          name: release-exe
+          path: dist
+
+      - name: Версия тега
+        id: version
+        run: |
+          tag="${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Описание релиза из CHANGELOG
+        id: notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python - <<'PY' > release-notes.md
+          import os, pathlib, re, sys
+
+          version = os.environ["VERSION"]
+          changelog = pathlib.Path("CHANGELOG.md")
+          if not changelog.exists():
+              sys.exit(0)
+          text = changelog.read_text(encoding="utf-8")
+          # берём блок «## [x.y.z] …» до следующего заголовка того же уровня
+          pattern = rf"^## \[?{re.escape(version)}\]?.*?(?=^## |\Z)"
+          match = re.search(pattern, text, re.S | re.M)
+          if match:
+              print(match.group(0).strip())
+              print()
+              print("### Файлы релиза")
+              print("- `Launcher-CoC.exe` — готовый лаунчер для Windows (Python не нужен)")
+              print("- `config.launcher` — настройка лаунчера (кнопки, заголовки, арт)")
+              print(
+                  "- Прямая ссылка на последнюю версию: "
+                  "https://github.com/ayonovdenizs/launcher-for-coc-by-stason172"
+                  "/releases/latest/download/Launcher-CoC.exe"
+              )
+              print("- `SHA256SUMS.txt` — контрольная сумма файла")
+              print()
+              print("> Файлы игры в релиз не входят: лаунчер нужно положить в корневую папку сборки.")
+          PY
+          if [ ! -s release-notes.md ]; then
+            printf 'Сборка лаунчера %s\n\nСкачайте `Launcher-CoC.exe` и положите рядом с игрой.\n' "${VERSION}" > release-notes.md
+          fi
+          cat release-notes.md
+
+      - name: Создать релиз и приложить файлы
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title "Лаунчер CoC ${{ steps.version.outputs.version }}" \
+            --notes-file release-notes.md \
+            dist/*.exe dist/config.launcher dist/SHA256SUMS.txt

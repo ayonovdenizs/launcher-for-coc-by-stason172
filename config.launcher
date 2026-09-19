@@ -1,0 +1,118 @@
+// config.launcher — настройка лаунчера сборки CoC от stason172.
+//
+// Это и рабочий файл сборки, и справочник по полям: рядом с каждым полем
+// написано, что оно делает. Автору другого мода достаточно скопировать файл
+// к себе и поправить значения — код лаунчера менять не нужно.
+//
+// Проверить файл, не запуская игру:   Launcher-CoC.exe --check-config
+// Создать пустой образец заново:      Launcher-CoC.exe --create-config
+//
+// Формат — JSON с комментариями (// и /* */) и висячими запятыми.
+
+{
+  // Заголовок окна в панели задач
+  "name": "Лаунчер Call of Chernobyl",
+
+  // Подсказка внизу окна до первого наведения на кнопку
+  "hint": "Выберите режим запуска",
+
+  // Подпись внизу окна. {version} — версия лаунчера
+  "footer": "Лаунчер от ayden · версия {version} · сборка CoC 1.4.22",
+
+  // Акцентный цвет кнопок и подсветок
+  "accent": "#c9821f",
+
+  "window": {
+    "width": 470,
+    "hero_height": 140      // высота шапки с заголовком
+  },
+
+  // Тексты шапки; пустое поле просто не показывается
+  "hero": {
+    "kicker": "S.T.A.L.K.E.R.",
+    "title": "CALL OF CHERNOBYL",
+    "subtitle": "Сборка от stason172 · CoC 1.4.22"
+  },
+
+  // Пусто — берётся встроенный арт лаунчера.
+  // Свой файл: "background": "launcher-art.jpg" (путь относительно этого файла)
+  "assets": {
+    "background": null,
+    "icon": null
+  },
+
+  // Что запускают кнопки с action: "run" и что считается обязательным
+  "game": {
+    "executable": "Stalker-CoC.exe",
+    "required_files": ["Stalker-CoC.exe", "gamedata"]
+  },
+
+  // Откуда лаунчер узнаёт о новых версиях (кнопка action: "update")
+  "update": {
+    "enabled": true,
+    "repo": "ayonovdenizs/launcher-for-coc-by-stason172"
+  },
+
+  // Кнопки меню: порядок в файле = порядок в окне
+  "options": [
+    {
+      "key": "run",
+      "title": "ЗАПУСК",
+      "description": "Обычный запуск CoC 1.4.22",
+      "action": "run",
+      "args": ["-skip_reg"],
+      "accent": true
+    },
+    {
+      "key": "debug",
+      "title": "ЗАПУСК (ОТЛАДКА)",
+      "description": "Запуск с отладкой и логом движка (-dbg)",
+      "action": "run",
+      "args": ["-skip_reg", "-dbg"]
+    },
+    {
+      "key": "fast",
+      "title": "ФАСТ ЗАПУСК",
+      "description": "Облегчённый режим для слабых ПК",
+      "action": "run",
+      "target": "CoC_1.4_02coreCPU.cmd"
+    },
+    {
+      "key": "mods",
+      "title": "МЕНЕДЖЕР МОДОВ",
+      "description": "Менеджер модов от stason172",
+      "action": "run",
+      "target": "Autorun.exe",
+      "keep_open": true
+    },
+    {
+      "key": "options",
+      "title": "НАСТРОЙКИ",
+      "description": "Графика и параметры игры",
+      "action": "run",
+      "target": "options.exe",
+      "keep_open": true
+    },
+    {
+      "key": "saves",
+      "title": "ПАПКА СОХРАНЕНИЙ",
+      "description": "Открыть savedgames в проводнике",
+      "action": "folder",
+      "path": "savedgames",
+      "hide_if_missing": true    // нет папки — нет кнопки
+    },
+    {
+      "key": "community",
+      "title": "СООБЩЕСТВО",
+      "description": "Группа сборки ВКонтакте: новости и обновления",
+      "action": "url",
+      "url": "https://vk.com/scoc174"
+    },
+    {
+      "key": "update",
+      "title": "ОБНОВЛЕНИЕ",
+      "description": "Проверить свежую версию лаунчера",
+      "action": "update"
+    }
+  ]
+}
